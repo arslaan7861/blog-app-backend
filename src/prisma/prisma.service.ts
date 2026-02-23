@@ -17,15 +17,12 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    // Create a PostgreSQL connection pool
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
     });
 
-    // Create Prisma PostgreSQL adapter
     const adapter = new PrismaPg(pool);
 
-    // Initialize PrismaClient with the adapter
     super({
       adapter,
       log:

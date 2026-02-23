@@ -1,4 +1,3 @@
-// src/common/guards/auth.guard.ts
 import {
   Injectable,
   CanActivate,
@@ -18,7 +17,6 @@ export class AuthGuard implements CanActivate {
     private reflector: Reflector,
   ) {}
 
-  // In canActivate method, modify the token validation part
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -28,7 +26,6 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
 
-    // If route is public, we still try to attach user if token exists
     if (isPublic) {
       if (token) {
         try {
@@ -42,14 +39,11 @@ export class AuthGuard implements CanActivate {
           if (user) {
             request.user = user;
           }
-        } catch {
-          // Ignore token errors for public routes
-        }
+        } catch {}
       }
       return true;
     }
 
-    // For protected routes, require valid token
     if (!token) {
       throw new UnauthorizedException('No token provided');
     }

@@ -21,7 +21,7 @@ export class RegisterDto {
   @IsString()
   @MinLength(2, { message: 'Name must be at least 2 characters long' })
   @MaxLength(50, { message: 'Name cannot exceed 50 characters' })
-  name!: string; // Removed IsOptional, now required
+  name!: string;
 }
 
 export class LoginDto {
@@ -38,7 +38,7 @@ export class AuthResponseDto {
   user!: {
     id: string;
     email: string;
-    name: string; // Now required, no null
+    name: string;
     createdAt?: Date;
   };
 }
@@ -48,7 +48,6 @@ export class RefreshTokenDto {
   refresh_token!: string;
 }
 
-// Optional: For password reset functionality
 export class ForgotPasswordDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })
   email!: string;

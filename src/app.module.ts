@@ -18,14 +18,13 @@ import { LoggerModule } from './common/logger/logger.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // Rate limiting with environment variables
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         throttlers: [
           {
-            ttl: config.get('RATE_LIMIT_TTL', 60) * 1000, // Convert to milliseconds
+            ttl: config.get('RATE_LIMIT_TTL', 60) * 1000,
             limit: config.get('RATE_LIMIT_GLOBAL', 100),
           },
         ],

@@ -21,23 +21,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status: number;
     let responseBody: any;
 
-    // Handle HTTP exceptions (including validation errors)
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
-      // Check if this is a validation error with detailed errors
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        // Pass through the detailed validation errors
         responseBody = {
           statusCode: status,
           timestamp: new Date().toISOString(),
           path: request.url,
           method: request.method,
-          ...exceptionResponse, // This will include the validation errors
+          ...exceptionResponse,
         };
       } else {
-        // Simple error message
         responseBody = {
           statusCode: status,
           timestamp: new Date().toISOString(),
@@ -47,9 +43,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           message: exceptionResponse,
         };
       }
-    }
-    // Handle Prisma errors
-    else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       status = HttpStatus.BAD_REQUEST;
       let message = 'Database operation failed';
 
@@ -87,9 +81,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         error: 'Validation Error',
         message: 'Invalid data format provided',
       };
-    }
-    // Handle all other errors
-    else {
+    } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       responseBody = {
         statusCode: status,
@@ -101,7 +93,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
     }
 
-    // Log the error
     this.errorLogger.logError(
       exception,
       request,

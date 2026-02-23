@@ -100,10 +100,8 @@ export class BlogsService {
       throw new NotFoundException('Blog not found');
     }
 
-    // Prepare update data
     const updateData: any = { ...updateBlogDto };
 
-    // If title is being updated, generate new slug
     if (updateBlogDto.title) {
       updateData.slug = await this.generateUniqueSlug(updateBlogDto.title, id);
     }
@@ -132,7 +130,6 @@ export class BlogsService {
   }
 
   async delete(id: string, userId: string) {
-    // Check if blog exists and user owns it
     const existingBlog = await this.prisma.blog.findFirst({
       where: { id, userId },
     });
@@ -159,7 +156,6 @@ export class BlogsService {
     let uniqueSlug = slug;
     let counter = 1;
 
-    // Check if slug exists
     while (await this.slugExists(uniqueSlug, excludeId)) {
       uniqueSlug = `${slug}-${counter}`;
       counter++;

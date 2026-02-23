@@ -7,13 +7,10 @@ import { ErrorLoggerService } from './common/logger/error-logger.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Get instances of services
   const errorLogger = app.get(ErrorLoggerService);
 
-  // Global validation pipe
   app.useGlobalPipes(new CustomValidationPipe());
 
-  // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter(errorLogger));
 
   // Enable CORS
@@ -30,7 +27,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`🚀 Application running on: http://localhost:${port}/api`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Application running on: http://localhost:${port}/api`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 }
 bootstrap();

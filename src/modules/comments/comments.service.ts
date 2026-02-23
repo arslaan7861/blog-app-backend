@@ -54,7 +54,6 @@ export class CommentsService {
   }
 
   async findAll(blogId: string, page: number = 1, limit: number = 10) {
-    // Check if blog exists
     const blog = await this.prisma.blog.findUnique({
       where: { id: blogId },
       select: { id: true },
@@ -122,7 +121,6 @@ export class CommentsService {
   }
 
   async update(id: string, userId: string, updateCommentDto: UpdateCommentDto) {
-    // Check if comment exists and user owns it
     const existingComment = await this.prisma.comment.findUnique({
       where: { id },
       select: { userId: true },
@@ -156,7 +154,6 @@ export class CommentsService {
   }
 
   async delete(id: string, userId: string) {
-    // Check if comment exists and user owns it
     const existingComment = await this.prisma.comment.findUnique({
       where: { id },
       select: { userId: true },
@@ -181,7 +178,6 @@ export class CommentsService {
   }
 
   async deleteByBlog(blogId: string, userId: string) {
-    // Check if blog exists and user owns it (for blog owners)
     const blog = await this.prisma.blog.findUnique({
       where: { id: blogId },
       select: { userId: true },
@@ -191,7 +187,6 @@ export class CommentsService {
       throw new NotFoundException('Blog not found');
     }
 
-    // Allow blog owner to delete all comments on their blog
     if (blog.userId !== userId) {
       throw new ForbiddenException(
         'You can only delete comments on your own blogs',

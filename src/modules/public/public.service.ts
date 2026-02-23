@@ -16,7 +16,6 @@ export class PublicService {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    // Get published blogs with counts using indexes
     const [blogs, total] = await Promise.all([
       this.prisma.blog.findMany({
         where: { isPublished: true },
@@ -49,7 +48,6 @@ export class PublicService {
       }),
     ]);
 
-    // Map to feed items
     const data: FeedItem[] = blogs.map((blog) => ({
       id: blog.id,
       title: blog.title,
@@ -83,7 +81,6 @@ export class PublicService {
   }
 
   async getBlogBySlug(slug: string, userId?: string): Promise<BlogDetail> {
-    // Get blog with related data using slug index
     const blog = await this.prisma.blog.findFirst({
       where: { slug, isPublished: true },
       select: {
@@ -129,7 +126,6 @@ export class PublicService {
       throw new NotFoundException('Blog not found');
     }
 
-    // Check if user liked this blog (if userId provided)
     let likedByUser = false;
     if (userId) {
       const like = await this.prisma.like.findUnique({
@@ -143,7 +139,6 @@ export class PublicService {
       likedByUser = !!like;
     }
 
-    // Map comments
     const comments: CommentItem[] = blog.comments.map((comment) => ({
       id: comment.id,
       content: comment.content,
@@ -175,9 +170,6 @@ export class PublicService {
     };
   }
 
-  /**
-   * Get blog by slug with paginated comments
-   */
   async getBlogWithPaginatedComments(
     slug: string,
     page: number = 1,
@@ -213,7 +205,6 @@ export class PublicService {
       throw new NotFoundException('Blog not found');
     }
 
-    // Get paginated comments
     const skip = (page - 1) * limit;
     const [comments, totalComments] = await Promise.all([
       this.prisma.comment.findMany({
@@ -239,7 +230,6 @@ export class PublicService {
       }),
     ]);
 
-    // Check like status if user is authenticated
     let likedByUser = false;
     if (userId) {
       const like = await this.prisma.like.findUnique({
@@ -292,9 +282,6 @@ export class PublicService {
     };
   }
 
-  /**
-   * Get popular blogs based on like and comment count
-   */
   async getPopularBlogs(limit: number = 5): Promise<FeedItem[]> {
     const blogs = await this.prisma.blog.findMany({
       where: { isPublished: true },
@@ -342,25 +329,20 @@ export class PublicService {
     }));
   }
 
-  /**
-   * Generate a summary from content
-   */
   private generateSummary(content: string, maxLength: number = 150): string {
     if (!content) return '';
 
-    // Simple plain text extraction
     const plainText = content
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/#+\s/g, '') // Remove markdown headers
-      .replace(/[*_~`]/g, '') // Remove markdown formatting
-      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/<[^>]*>/g, '')
+      .replace(/#+\s/g, '')
+      .replace(/[*_~`]/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
 
     if (plainText.length <= maxLength) {
       return plainText;
     }
 
-    // Cut at last space within limit
     const truncated = plainText.substring(0, maxLength);
     const lastSpace = truncated.lastIndexOf(' ');
 

@@ -10,7 +10,6 @@ export class LikesService {
   constructor(private prisma: PrismaService) {}
 
   async like(userId: string, blogId: string) {
-    // Check if blog exists and is published
     const blog = await this.prisma.blog.findUnique({
       where: { id: blogId },
       select: { id: true, isPublished: true },
@@ -25,7 +24,6 @@ export class LikesService {
     }
 
     try {
-      // Create like with unique constraint protection
       await this.prisma.like.create({
         data: {
           userId,
@@ -33,14 +31,12 @@ export class LikesService {
         },
       });
     } catch (error: any) {
-      // P2002 is Prisma's unique constraint violation error
       if (error.code === 'P2002') {
         throw new ConflictException('You have already liked this post');
       }
       throw error;
     }
 
-    // Get updated like count
     const likesCount = await this.prisma.like.count({
       where: { blogId },
     });
@@ -52,7 +48,6 @@ export class LikesService {
   }
 
   async unlike(userId: string, blogId: string) {
-    // Check if blog exists
     const blog = await this.prisma.blog.findUnique({
       where: { id: blogId },
       select: { id: true },
@@ -63,7 +58,6 @@ export class LikesService {
     }
 
     try {
-      // Delete the like
       await this.prisma.like.delete({
         where: {
           userId_blogId: {
@@ -73,14 +67,12 @@ export class LikesService {
         },
       });
     } catch (error: any) {
-      // P2025 is Prisma's record not found error
       if (error.code === 'P2025') {
         throw new NotFoundException('You have not liked this post');
       }
       throw error;
     }
 
-    // Get updated like count
     const likesCount = await this.prisma.like.count({
       where: { blogId },
     });
@@ -92,7 +84,6 @@ export class LikesService {
   }
 
   async getLikeStatus(userId: string, blogId: string) {
-    // Check if blog exists
     const blog = await this.prisma.blog.findUnique({
       where: { id: blogId },
       select: { id: true },
@@ -102,7 +93,6 @@ export class LikesService {
       throw new NotFoundException('Blog not found');
     }
 
-    // Check if user liked the blog
     const like = await this.prisma.like.findUnique({
       where: {
         userId_blogId: {
@@ -112,7 +102,6 @@ export class LikesService {
       },
     });
 
-    // Get total likes count
     const likesCount = await this.prisma.like.count({
       where: { blogId },
     });
@@ -141,7 +130,7 @@ export class LikesService {
           createdAt: true,
         },
         orderBy: { createdAt: 'desc' },
-        take: 10, // Limit to recent 10 likes
+        take: 10,
       }),
     ]);
 

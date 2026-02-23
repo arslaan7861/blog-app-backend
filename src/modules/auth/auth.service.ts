@@ -30,7 +30,7 @@ export class AuthService {
       data: {
         email: registerDto.email,
         passwordHash: hashedPassword,
-        name: registerDto.name, // Now required
+        name: registerDto.name,
       },
       select: {
         id: true,
@@ -64,15 +64,11 @@ export class AuthService {
     return this.generateToken({
       id: user.id,
       email: user.email,
-      name: user.name, // Now required
+      name: user.name,
     });
   }
 
-  private generateToken(user: {
-    id: string;
-    email: string;
-    name: string; // Now required
-  }) {
+  private generateToken(user: { id: string; email: string; name: string }) {
     const payload = { sub: user.id, email: user.email };
 
     return {

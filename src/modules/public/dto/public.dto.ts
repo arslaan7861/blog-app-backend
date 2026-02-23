@@ -16,7 +16,6 @@ export class FeedQueryDto {
   limit: number = 10;
 }
 
-// Using Pick from Prisma Client for type consistency
 import { User, Comment } from '@prisma/client';
 
 export interface FeedItem {
