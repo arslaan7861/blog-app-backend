@@ -45,11 +45,13 @@ FRONTEND_URL=http://localhost:3000
 #### Getting a PostgreSQL Database
 
 **Using Supabase (Recommended):**
+
 1. Go to [supabase.com](https://supabase.com)
 2. Create a new project
 3. Copy the connection string and paste it as `DATABASE_URL`
 
 **Using Local PostgreSQL:**
+
 ```bash
 # On macOS with Homebrew
 brew install postgresql
@@ -71,6 +73,7 @@ npx prisma migrate dev
 ```
 
 This will:
+
 - Create all necessary database tables
 - Run all migration files
 - Generate Prisma client
@@ -137,17 +140,175 @@ src/
 └── prisma/                        # Database service
 ```
 
+## ⚖️ Key Decisions & Tradeoffs
+
+This project prioritizes **developer productivity, maintainability, and scalability for a mid-scale SaaS blogging platform** while keeping operational complexity low.
+
+---
+
+### Architecture — Modular Monolith (NestJS Modules)
+
+The API follows a **modular monolith architecture**, separating domains into independent modules such as `auth`, `blogs`, `comments`, `likes`, and `users`.
+
+**Pros**
+
+- Faster development and simpler deployments compared to microservices.
+- Clear domain boundaries improve maintainability.
+- Easier debugging with a single runtime and database.
+
+**Tradeoffs**
+
+- Horizontal scaling is less flexible than distributed services.
+- Requires careful module boundaries as the system grows.
+
+Microservices were intentionally avoided at this stage to reduce infrastructure complexity and premature optimization.
+
+---
+
+### Framework — NestJS
+
+NestJS was selected over minimal frameworks like Express for its structured architecture and strong Type safety.
+
+**Pros**
+
+- Built-in dependency injection improves testing and decoupling.
+- Guards, interceptors, and filters enable centralized cross-cutting concerns.
+- Opinionated structure supports team collaboration.
+
+**Tradeoffs**
+
+- More boilerplate compared to lightweight frameworks.
+- Slight learning curve for developers unfamiliar with decorators or DI.
+
+---
+
+### Database — PostgreSQL
+
+PostgreSQL is used as the primary datastore due to strong relational guarantees between users, blogs, comments, and likes.
+
+**Pros**
+
+- ACID compliance ensures data integrity.
+- Powerful indexing and query capabilities.
+- Mature ecosystem and reliability.
+
+**Tradeoffs**
+
+- Schema migrations require planning.
+- Operational setup is heavier compared to schema-less databases.
+
+NoSQL databases were considered but rejected due to relational querying needs.
+
+---
+
+### ORM — Prisma
+
+Prisma ORM provides strongly typed database access and migration tooling.
+
+**Pros**
+
+- Excellent developer experience and auto-generated types.
+- Reduced SQL injection risk via parameterized queries.
+- Easy schema evolution through migrations.
+
+**Tradeoffs**
+
+- Less flexibility for extremely complex or highly optimized SQL queries.
+- Adds an abstraction layer between application and database.
+
+---
+
+### Authentication — JWT (Stateless)
+
+Authentication uses JWT access tokens.
+
+**Pros**
+
+- Stateless authentication enables horizontal scaling.
+- Works seamlessly with frontend SPA applications.
+- No session store dependency.
+
+**Tradeoffs**
+
+- Token revocation is harder than session-based systems.
+- Requires expiration and refresh strategies.
+
+---
+
+### Validation — Zod Schemas
+
+Input validation uses Zod schemas applied through NestJS pipes.
+
+**Pros**
+
+- Runtime validation with TypeScript inference.
+- Reusable schemas across services and DTOs.
+- Consistent API contracts.
+
+**Tradeoffs**
+
+- Minor runtime overhead during validation.
+- Additional dependency compared to decorator-based validation.
+
+---
+
+### Pagination Strategy
+
+Offset pagination (`page` + `limit`) is implemented for list endpoints.
+
+**Pros**
+
+- Simple frontend integration.
+- Easy implementation and debugging.
+
+**Tradeoffs**
+
+- Performance degradation on extremely large datasets.
+- Cursor pagination may be introduced in future scaling phases.
+
+---
+
+### Security Controls
+
+Security features include JWT authentication, rate limiting, validation pipes, and ownership guards.
+
+**Pros**
+
+- Prevents brute-force login attempts.
+- Centralized authorization logic reduces controller duplication.
+- Input validation protects against malformed requests.
+
+**Tradeoffs**
+
+- Requires monitoring and tuning rate limits under real traffic conditions.
+
+---
+
+### Deployment Strategy
+
+Docker support is optional to support multiple deployment environments.
+
+**Pros**
+
+- Flexible deployment to VPS or container orchestration platforms.
+- Easier environment reproducibility.
+
+**Tradeoffs**
+
+- Adds Docker knowledge requirements for teams adopting containers.
+
 ## 🔌 API Endpoints
 
 ### Authentication (`/api/auth`)
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/register` | Register new user | No |
-| POST | `/login` | Login and get JWT token | No |
-| POST | `/logout` | Logout user | Yes |
+| Method | Endpoint    | Description             | Auth Required |
+| ------ | ----------- | ----------------------- | ------------- |
+| POST   | `/register` | Register new user       | No            |
+| POST   | `/login`    | Login and get JWT token | No            |
+| POST   | `/logout`   | Logout user             | Yes           |
 
 **Register Request:**
+
 ```json
 {
   "email": "user@example.com",
@@ -157,6 +318,7 @@ src/
 ```
 
 **Login Request:**
+
 ```json
 {
   "email": "user@example.com",
@@ -166,15 +328,16 @@ src/
 
 ### Blogs (`/api/blogs`)
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/` | Get all blogs (paginated) | No |
-| GET | `/:slug` | Get single blog by slug | No |
-| POST | `/` | Create new blog | Yes |
-| PATCH | `/:id` | Update blog | Yes (owner) |
-| DELETE | `/:id` | Delete blog | Yes (owner) |
+| Method | Endpoint | Description               | Auth Required |
+| ------ | -------- | ------------------------- | ------------- |
+| GET    | `/`      | Get all blogs (paginated) | No            |
+| GET    | `/:slug` | Get single blog by slug   | No            |
+| POST   | `/`      | Create new blog           | Yes           |
+| PATCH  | `/:id`   | Update blog               | Yes (owner)   |
+| DELETE | `/:id`   | Delete blog               | Yes (owner)   |
 
 **Create Blog Request:**
+
 ```json
 {
   "title": "My Amazing Blog Post",
@@ -185,13 +348,14 @@ src/
 
 ### Comments (`/api/comments`)
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/blog/:blogId` | Get comments for blog | No |
-| POST | `/` | Create comment | Yes |
-| DELETE | `/:id` | Delete comment | Yes (owner) |
+| Method | Endpoint        | Description           | Auth Required |
+| ------ | --------------- | --------------------- | ------------- |
+| GET    | `/blog/:blogId` | Get comments for blog | No            |
+| POST   | `/`             | Create comment        | Yes           |
+| DELETE | `/:id`          | Delete comment        | Yes (owner)   |
 
 **Create Comment Request:**
+
 ```json
 {
   "content": "Great article!",
@@ -201,12 +365,13 @@ src/
 
 ### Likes (`/api/likes`)
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/` | Like/unlike blog | Yes |
-| GET | `/blog/:blogId` | Get likes count | No |
+| Method | Endpoint        | Description      | Auth Required |
+| ------ | --------------- | ---------------- | ------------- |
+| POST   | `/`             | Like/unlike blog | Yes           |
+| GET    | `/blog/:blogId` | Get likes count  | No            |
 
 **Like Request:**
+
 ```json
 {
   "blogId": "blog-id"
@@ -215,10 +380,10 @@ src/
 
 ### Users (`/api/users`)
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/:id` | Get user profile | No |
-| PATCH | `/:id` | Update user profile | Yes (owner) |
+| Method | Endpoint | Description         | Auth Required |
+| ------ | -------- | ------------------- | ------------- |
+| GET    | `/:id`   | Get user profile    | No            |
+| PATCH  | `/:id`   | Update user profile | Yes (owner)   |
 
 ## 🔐 Authentication
 
@@ -229,6 +394,7 @@ The API uses **JWT (JSON Web Tokens)** for authentication:
 3. **Include Token** - Send token in `Authorization` header: `Bearer <token>`
 
 Protected routes require:
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ```
@@ -279,6 +445,7 @@ GET /api/blogs?page=1&limit=10
 ```
 
 Response includes:
+
 ```json
 {
   "data": [...],
@@ -312,6 +479,7 @@ Test files use Jest and are named `*.spec.ts`
 ### Validation
 
 Input validation uses **Zod** schemas defined in DTO files:
+
 - `src/modules/*/dto/*.ts`
 
 All requests are validated automatically by pipes.
@@ -319,6 +487,7 @@ All requests are validated automatically by pipes.
 ### Rate Limiting
 
 Global and endpoint-specific rate limits are configured in `.env`:
+
 - Prevents brute force attacks
 - Protects heavy operations
 - Differs for auth endpoints vs public endpoints
@@ -342,6 +511,7 @@ npm run format
 ```
 
 Uses:
+
 - **ESLint** for code linting
 - **Prettier** for code formatting
 - **TypeScript** for type safety
@@ -365,6 +535,7 @@ npm run start:prod
 ### Environment Variables
 
 In production, ensure `.env` includes:
+
 - Strong `JWT_SECRET`
 - Production database URL
 - Correct `FRONTEND_URL`
@@ -390,6 +561,7 @@ CMD ["node", "dist/src/main"]
 ```
 
 Build and run:
+
 ```bash
 docker build -t writecraft-api .
 docker run -p 3001:3001 --env-file .env writecraft-api
